@@ -29,11 +29,13 @@ class Mysql2Pgsql(object):
             writer = PostgresFileWriter(self._get_file(self.file_options['destination']['file']), 
                                         self.run_options.verbose, 
                                         tz=self.file_options.get('timezone', False),
+                                        tz_of_naives=self.file_options.get('timezone_of_naives_from_mysql', None),
                                         index_prefix=self.file_options.get("index_prefix", ''))
         else:
             writer = PostgresDbWriter(self.file_options['destination']['postgres'], 
                                       self.run_options.verbose, 
                                       tz=self.file_options.get('timezone', False),
+                                      tz_of_naives=self.file_options.get('timezone_of_naives_from_mysql', None),
                                       index_prefix=self.file_options.get("index_prefix", ''))
 
         Converter(reader, writer, self.file_options, self.run_options.verbose).convert()

@@ -78,8 +78,22 @@ supress_ddl: false
 # if force_truncate is true, forces a table truncate before table loading
 force_truncate: false
 
-# if timezone is true, forces to append/convert to UTC tzinfo mysql data
+# If timezone is true, forces to append/convert to UTC tzinfo mysql data.
+# When mysql data has no tzinfo but stores datetimes from another timezone
+# than UTC then this will led to conversion errors. Because the naive datetimes
+# from mysql will be treated as if they were UTC. If the timezone of the in
+# mysql stored datetimes is known use timezone_of_naives_from_mysql option
+# to get correctly converted UTC times.
 timezone: false
+
+# If timezone_of_naives_from_mysql is set then the naive datetime instances
+# which were instantiated from the mysql data are localized to this timezone
+# first. Together with the option timezone set to true it is possible to create
+# a dump of a mysql database were datetimes have no tzinfo but the timezone
+# of them is known from other source and convert them to correct recalculated
+# datetimes with UTC tzinfo. This option has only influence on the dump when
+# option timezone is set to true.
+timezone_of_naives_from_mysql:
 
 # if index_prefix is given, indexes will be created whith a name prefixed with index_prefix
 index_prefix:

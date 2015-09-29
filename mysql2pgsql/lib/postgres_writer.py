@@ -12,7 +12,7 @@ class PostgresWriter(object):
     """Base class for :py:class:`mysql2pgsql.lib.postgres_file_writer.PostgresFileWriter`
     and :py:class:`mysql2pgsql.lib.postgres_db_writer.PostgresDbWriter`.
     """
-    def __init__(self, tz=False, index_prefix=''):
+    def __init__(self, tz=False, tz_of_naives=None, index_prefix=''):
         self.column_types = {}
         self.index_prefix = index_prefix
         if tz:
@@ -21,6 +21,10 @@ class PostgresWriter(object):
         else:
             self.tz = None
             self.tz_offset = ''
+        if tz_of_naives:
+            self.tz_of_naives = timezone(tz_of_naives)
+        else:
+            self.tz_of_naives = None
 
     def column_description(self, column):
         return '"%s" %s' % (column['name'], self.column_type_info(column))
@@ -180,6 +184,8 @@ class PostgresWriter(object):
                     try:
                         if row[index].tzinfo:
                             row[index] = row[index].astimezone(self.tz).isoformat()
+                        elif self.tz_of_naives:
+                            row[index] = self.tz_of_naives.localize(row[index]).astimezone(self.tz).isoformat()
                         else:
                             row[index] = datetime(*row[index].timetuple()[:6], tzinfo=self.tz).isoformat()
                     except Exception as e:
