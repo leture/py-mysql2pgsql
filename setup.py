@@ -1,21 +1,15 @@
-import os
 import sys
 from setuptools import setup
 
 install_requires = [
-    'mysql-python>=1.2.3', 
+    'clint>=0.5.1',
+    'mysqlclient>=1.3.6',
     'psycopg2>=2.4.2',
-    'pyyaml>=3.10.0',
     'pytz',
+    'pyyaml>=3.10.0',
 ]
 
-if os.name == 'posix':
-    install_requires.append('termcolor>=1.1.0')
-
 version = sys.version_info[:2]
-
-if version < (2,7) or (3,0) <= version <= (3,1):
-    install_requires += ['argparse']
 
 setup(
     name='py-mysql2pgsql',

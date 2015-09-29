@@ -1,35 +1,26 @@
 from __future__ import absolute_import
 
 import sys
+
+from clint.textui import colored
+from clint.textui import puts
+
 from functools import wraps
 
 from .mysql_reader import MysqlReader
-try:
-    from termcolor import cprint
-except ImportError:
-    pass
 
 
 def print_row_progress(val):
-    try:
-        cprint('  %s' % val, 'cyan', end=' ')
-    except NameError:
-        print('  %s' % val),
+    puts(colored.cyan('  {}'.format(val)))
     sys.stdout.flush()
 
 
 def print_start_table(val):
-    try:
-        cprint(val, 'magenta')
-    except NameError:
-        print(val)
+    puts(colored.magenta(val))
 
 
 def print_table_actions(val):
-    try:
-        cprint('  %s' % val, 'green')
-    except NameError:
-        print('  %s' % val)
+    puts(colored.green('  {}'.format(val)))
 
 
 def find_first(items, func):
@@ -37,10 +28,7 @@ def find_first(items, func):
 
 
 def print_red(val):
-    try:
-        cprint(val, 'red')
-    except NameError:
-        print(val)
+    puts(colored.red(val))
 
 
 def status_logger(f):

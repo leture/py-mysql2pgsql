@@ -1,6 +1,5 @@
-mysql-python
+clint
+mysqlclient
 psycopg2
 pyyaml
-termcolor
-argparse
 pytz
