@@ -1,6 +1,8 @@
 from __future__ import absolute_import
 
+import argparse
 import codecs
+import sys
 
 from .lib import print_red
 from .lib.mysql_reader import MysqlReader
@@ -38,3 +40,39 @@ class Mysql2Pgsql(object):
 
     def _get_file(self, file_path):
         return codecs.open(file_path, 'wb', 'utf-8')
+
+
+def main():
+    description = 'Tool for migrating/converting data from mysql to postgresql.'
+    epilog = 'https://github.com/philipsoutham/py-mysql2pgsql'
+
+    parser = argparse.ArgumentParser(
+        description=description,
+        epilog=epilog)
+    parser.add_argument(
+        '-v', '--verbose',
+        action='store_true',
+        help='Show progress of data migration.'
+        )
+    parser.add_argument(
+        '-f', '--file',
+        default='mysql2pgsql.yml',
+        help='Location of configuration file (default: %(default)s). If none exists at that path, one will be created for you.',
+        )
+    parser.add_argument(
+        '-V', '--version',
+        action='store_true',
+        help='Print version and exit.'
+        )
+    options = parser.parse_args()
+
+    if options.version:
+        # Someone wants to know the version, print and exit
+        from . import __version__
+        print(__version__)
+        sys.exit(0)
+
+    try:
+        Mysql2Pgsql(options).convert()
+    except ConfigurationFileInitialized:
+        sys.exit(-1)

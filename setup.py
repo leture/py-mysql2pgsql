@@ -9,11 +9,9 @@ install_requires = [
     'pyyaml>=3.10.0',
 ]
 
-version = sys.version_info[:2]
-
 setup(
     name='py-mysql2pgsql',
-    version='0.1.6',
+    version='0.1.7',
     description='Tool for migrating/converting from mysql to postgresql.',
     long_description=open('README.rst').read(),
     license='MIT License',
@@ -22,7 +20,11 @@ setup(
     url='https://github.com/philipsoutham/py-mysql2pgsql',
     zip_safe=False,
     packages=['mysql2pgsql', 'mysql2pgsql.lib'],
-    scripts=['bin/py-mysql2pgsql'],
+    entry_points={
+        'console_scripts': [
+            'py-mysql2pgsql = mysql2pgsql.mysql2pgsql:main',
+        ],
+    },
     platforms='any',
     install_requires=install_requires,
     classifiers=[
