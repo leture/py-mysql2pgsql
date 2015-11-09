@@ -98,4 +98,9 @@ timezone_of_naives_from_mysql:
 # if index_prefix is given, indexes will be created whith a name prefixed with index_prefix
 index_prefix:
 
+# if this list is non empty then it will be used to generate a dump which
+# properly converts between the different overlong table name mangling for
+# MySQL and PostgreSQL by Django
+django_unshortened_table_names: []
+
 """

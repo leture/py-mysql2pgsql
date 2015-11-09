@@ -23,7 +23,11 @@ class Mysql2Pgsql(object):
             raise e
 
     def convert(self):
-        reader = MysqlReader(self.file_options['mysql'])
+        reader = MysqlReader(
+            self.file_options['mysql'],
+            self.file_options.get(
+                'django_unshortened_table_names',
+                []))
 
         if self.file_options['destination']['file']:
             writer = PostgresFileWriter(self._get_file(self.file_options['destination']['file']), 

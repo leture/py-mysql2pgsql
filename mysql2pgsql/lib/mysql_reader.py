@@ -1,5 +1,6 @@
 from __future__ import with_statement, absolute_import
 
+import hashlib
 import re
 from contextlib import closing
 
@@ -75,12 +76,26 @@ class DB:
                 yield row
 
 
+def truncate_name(name, length=None, hash_len=4):
+    # Implementation was copied from Django 1.4.22
+
+    if length is None or len(name) <= length:
+        return name
+
+    hsh = hashlib.md5(name).hexdigest()[:hash_len]
+    return '%s%s' % (name[:length-hash_len], hsh)
+
+
 class MysqlReader(object):
 
     class Table(object):
-        def __init__(self, reader, name):
+        def __init__(self, reader, name, django_unshortened_table_names_map):
             self.reader = reader
             self._name = name
+            if name in django_unshortened_table_names_map:
+                self._name_for_pgsql = django_unshortened_table_names_map[name]
+            else:
+                self._name_for_pgsql = name
             self._indexes = []
             self._foreign_keys = []
             self._triggers = []
@@ -213,6 +228,10 @@ class MysqlReader(object):
             return self._name
 
         @property
+        def name_for_pgsql(self):
+            return self._name_for_pgsql
+
+        @property
         def columns(self):
             return self._columns
 
@@ -238,12 +257,17 @@ class MysqlReader(object):
                 'table_name': self.name,
                 'column_names': ', '. join(c['select'] for c in self.columns)}
 
-    def __init__(self, options):
+    def __init__(self, options, django_unshortened_table_names):
         self.db = DB(options)
+        self.django_unshortened_table_names_map = {}
+
+        for table_name in django_unshortened_table_names:
+            self.django_unshortened_table_names_map[truncate_name(table_name, 64)] = truncate_name(
+                table_name, 63)
 
     @property
     def tables(self):
-        return (self.Table(self, t[0]) for t in self.db.list_tables())
+        return (self.Table(self, t[0], django_unshortened_table_names_map=self.django_unshortened_table_names_map) for t in self.db.list_tables())
 
     def read(self, table):
         return self.db.query(table.query_for, large=True)

@@ -138,9 +138,9 @@ class PostgresWriter(object):
     def table_comments(self, table):
         comments = StringIO()
         if table.comment: 
-          comments.write(self.table_comment(table.name, table.comment))
+          comments.write(self.table_comment(table.name_for_pgsql, table.comment))
         for column in table.columns:
-          comments.write(self.column_comment(table.name, column))
+          comments.write(self.column_comment(table.name_for_pgsql, column))
         return comments.getvalue() 
 
     def column_comment(self, tablename, column):
@@ -221,12 +221,12 @@ class PostgresWriter(object):
                 serial_key = column['name']
                 maxval = 1 if column['maxval'] < 1 else column['maxval'] + 1
 
-        truncate_sql = 'TRUNCATE "%s" CASCADE;' % table.name
+        truncate_sql = 'TRUNCATE "%s" CASCADE;' % table.name_for_pgsql
         serial_key_sql = None
 
         if serial_key:
             serial_key_sql = "SELECT pg_catalog.setval(pg_get_serial_sequence(%(table_name)s, %(serial_key)s), %(maxval)s, true);" % {
-                'table_name': QuotedString('"%s"' % table.name).getquoted(),
+                'table_name': QuotedString('"%s"' % table.name_for_pgsql).getquoted(),
                 'serial_key': QuotedString(serial_key).getquoted(),
                 'maxval': maxval}
 
@@ -237,14 +237,14 @@ class PostgresWriter(object):
         serial_key_sql = []
         table_sql = []
         if serial_key:
-            serial_key_seq = '%s_%s_seq' % (table.name, serial_key)
+            serial_key_seq = '%s_%s_seq' % (table.name_for_pgsql, serial_key)
             serial_key_sql.append('DROP SEQUENCE IF EXISTS "%s" CASCADE;' % serial_key_seq)
             serial_key_sql.append("""CREATE SEQUENCE "%s" INCREMENT BY 1
                                   NO MAXVALUE NO MINVALUE CACHE 1;""" % serial_key_seq)
             serial_key_sql.append('SELECT pg_catalog.setval(\'"%s"\', %s, true);' % (serial_key_seq, maxval))
 
-        table_sql.append('DROP TABLE IF EXISTS "%s" CASCADE;' % table.name)
-        table_sql.append('CREATE TABLE "%s" (\n%s\n)\nWITHOUT OIDS;' % (table.name.encode('utf8'), columns))
+        table_sql.append('DROP TABLE IF EXISTS "%s" CASCADE;' % table.name_for_pgsql)
+        table_sql.append('CREATE TABLE "%s" (\n%s\n)\nWITHOUT OIDS;' % (table.name_for_pgsql.encode('utf8'), columns))
         table_sql.append( self.table_comments(table))
         return (table_sql, serial_key_sql)
 
@@ -254,8 +254,8 @@ class PostgresWriter(object):
         index_prefix = self.index_prefix
         if primary_index:
             index_sql.append('ALTER TABLE "%(table_name)s" ADD CONSTRAINT "%(index_name)s_pkey" PRIMARY KEY(%(column_names)s);' % {
-                    'table_name': table.name,
-                    'index_name': '%s%s_%s' % (index_prefix, table.name, 
+                    'table_name': table.name_for_pgsql,
+                    'index_name': '%s%s_%s' % (index_prefix, table.name_for_pgsql,
                                         '_'.join(primary_index[0]['columns'])),
                     'column_names': ', '.join('"%s"' % col for col in primary_index[0]['columns']),
                     })
@@ -263,12 +263,12 @@ class PostgresWriter(object):
             if 'primary' in index:
                 continue
             unique = 'UNIQUE ' if index.get('unique', None) else ''
-            index_name = '%s%s_%s' % (index_prefix, table.name, '_'.join(index['columns']))
+            index_name = '%s%s_%s' % (index_prefix, table.name_for_pgsql, '_'.join(index['columns']))
             index_sql.append('DROP INDEX IF EXISTS "%s" CASCADE;' % index_name)
             index_sql.append('CREATE %(unique)sINDEX "%(index_name)s" ON "%(table_name)s" (%(column_names)s);' % {
                     'unique': unique,
                     'index_name': index_name,
-                    'table_name': table.name,
+                    'table_name': table.name_for_pgsql,
                     'column_names': ', '.join('"%s"' % col for col in index['columns']),
                     })
 
@@ -279,7 +279,7 @@ class PostgresWriter(object):
         for key in table.foreign_keys:
             constraint_sql.append("""ALTER TABLE "%(table_name)s" ADD FOREIGN KEY ("%(column_name)s")
             REFERENCES "%(ref_table_name)s"(%(ref_column_name)s);""" % {
-                'table_name': table.name,
+                'table_name': table.name_for_pgsql,
                 'column_name': key['column'],
                 'ref_table_name': key['ref_table'],
                 'ref_column_name': key['ref_column']})
@@ -294,7 +294,7 @@ class PostgresWriter(object):
             RETURN NULL;
             END;
             $%(trigger_name)s$ LANGUAGE plpgsql;""" % {
-                'table_name': table.name,
+                'table_name': table.name_for_pgsql,
                 'trigger_time': key['timing'],
                 'trigger_event': key['event'],
                 'trigger_name': key['name'],
@@ -304,7 +304,7 @@ class PostgresWriter(object):
             trigger_sql.append("""CREATE TRIGGER %(trigger_name)s %(trigger_time)s %(trigger_event)s ON %(table_name)s
             FOR EACH ROW
             EXECUTE PROCEDURE fn_%(trigger_name)s();""" % {
-                'table_name': table.name,
+                'table_name': table.name_for_pgsql,
                 'trigger_time': key['timing'],
                 'trigger_event': key['event'],
                 'trigger_name': key['name']})

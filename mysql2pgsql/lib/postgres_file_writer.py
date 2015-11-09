@@ -45,7 +45,7 @@ SET client_min_messages = warning;
         self.f.write("""
 -- TRUNCATE %(table_name)s;
 %(truncate_sql)s
-""" % {'table_name': table.name, 'truncate_sql': truncate_sql})
+""" % {'table_name': table.name_for_pgsql, 'truncate_sql': truncate_sql})
 
         if serial_key_sql:
             self.f.write("""
@@ -74,7 +74,7 @@ SET client_min_messages = warning;
 -- Table: %(table_name)s
 %(table_sql)s
 """ % {
-    'table_name': table.name,
+    'table_name': table.name_for_pgsql,
     'table_sql': '\n'.join(table_sql),
     })
 
@@ -134,7 +134,7 @@ SET client_min_messages = warning;
 
 COPY "%(table_name)s" (%(column_names)s) FROM stdin;
 """ % {
-                'table_name': table.name,
+                'table_name': table.name_for_pgsql,
                 'column_names': ', '.join(('"%s"' % col['name']) for col in table.columns)})
         if verbose:
             tt = time.time

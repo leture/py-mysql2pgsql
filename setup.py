@@ -11,7 +11,7 @@ install_requires = [
 
 setup(
     name='py-mysql2pgsql',
-    version='0.1.8',
+    version='0.1.9',
     description='Tool for migrating/converting from mysql to postgresql.',
     long_description=open('README.rst').read(),
     license='MIT License',
